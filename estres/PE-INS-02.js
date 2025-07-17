@@ -5,19 +5,14 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
+const csvData = open('./instructor.csv');
 const rows = CSV.parse(csvData, ',');
 
-const courseIds = rows.map(row => row.courseId).filter(id => id);
+const data = rows.map(row => ({
+  courseId: row.courseId,
+  instructorEmail: row.instructorEmail
+})).filter(item => item.courseId && item.instructorEmail);
 
-// Emails de instructores de ejemplo (en producción vendría del CSV)
-const instructorEmails = [
-  'instructor1@example.com',
-  'instructor2@example.com',
-  'instructor3@example.com',
-  'instructor4@example.com',
-  'instructor5@example.com'
-];
 
 // Roles predefinidos disponibles
 const roles = ['Co-owner', 'Manager', 'Observer', 'Tutor', 'Custom'];
@@ -40,15 +35,11 @@ export let options = {
   },
 };
 
-function getRandomCourseId() {
-  if (courseIds.length === 0) {
-    throw new Error('No hay courseIds disponibles en el CSV');
+function getRandomData() {
+  if (data.length === 0) {
+    throw new Error('No hay datos disponibles en el CSV');
   }
-  return courseIds[__ITER % courseIds.length];
-}
-
-function getRandomInstructorEmail() {
-  return instructorEmails[__ITER % instructorEmails.length];
+  return data[__ITER % data.length];
 }
 
 function getRandomRole() {
@@ -77,10 +68,9 @@ function generatePrivilegePayload(role) {
 }
 
 export default function () {
-  const courseId = getRandomCourseId();
-  const instructorEmail = getRandomInstructorEmail();
+  const { courseId, instructorEmail } = getRandomData();
   const role = getRandomRole();
-  
+
   const url = `${BASE_URL}/webapi/instructor/privilege?courseid=${courseId}&instructoremail=${instructorEmail}`;
   const payload = JSON.stringify(generatePrivilegePayload(role));
   const headers = getHeadersWithCSRF();
