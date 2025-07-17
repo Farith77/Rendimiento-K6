@@ -4,16 +4,23 @@ Sistema de pruebas de rendimiento usando K6, Grafana e InfluxDB para monitorear 
 
 ## 🚀 Características
 
-- **K6**: Herramienta de pruebas de carga moderna
+- **K6 personalizado**: Binario con extensiones integradas (dotenv, csv, dashboard)
 - **InfluxDB**: Base de datos de series temporales para almacenar métricas
 - **Grafana**: Dashboard de visualización de métricas en tiempo real
 - **Docker Compose**: Orquestación de servicios
+- **Autenticación**: Sistema de tokens para APIs protegidas
+- **Procesamiento CSV**: Carga de datos desde archivos CSV para pruebas
 
 ## 📋 Prerrequisitos
 
 - [Docker](https://www.docker.com/get-started)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- [K6](https://k6.io/docs/get-started/installation/) instalado localmente
+- **K6 personalizado** incluido en la raíz del proyecto con extensiones:
+  - `xk6-dotenv`: Para cargar variables de entorno desde archivo `.env`
+  - `xk6-csv`: Para procesar archivos CSV en las pruebas
+  - `xk6-dashboard`: Para generar reportes visuales en tiempo real
+
+> **Nota**: Este proyecto incluye un binario `k6.exe` personalizado con extensiones. No es necesario instalar K6 por separado.
 
 ## 🛠️ Instalación y Configuración
 
@@ -45,7 +52,18 @@ Este comando iniciará:
      - **Password**: `admin123`
    - Haz clic en **Save & Test**
 
-### 3. Importar el Dashboard
+### 3. Configurar tokens de autenticación
+
+1. **Crear archivo .env:**
+   - Copia el archivo `.env.example` a `.env`
+   - Actualiza los valores con tus tokens actuales:
+   ```
+   JSESSIONID=tu_jsession_id_actual
+   CSRF_TOKEN=tu_csrf_token_actual
+   AUTH_TOKEN=tu_auth_token_actual
+   ```
+
+### 4. Importar el Dashboard
 
 1. **Importar dashboard:**
    - Ve a **Dashboards** → **Import**
@@ -53,40 +71,43 @@ Este comando iniciará:
    - Selecciona el archivo `grafana_dashboard.json` de este repositorio
    - Haz clic en **Import**
 
-### 4. Ejecutar pruebas de K6
+### 5. Ejecutar pruebas de K6
+
+> **Importante**: Usa siempre el binario `k6.exe` incluido en la raíz del proyecto, que contiene las extensiones necesarias.
 
 #### Prueba básica (ejemplo):
 ```bash
-k6 run --vus 100 --duration 1m --out influxdb=http://localhost:8086/k6 index.js
+.\k6.exe run --vus 100 --duration 1m --out influxdb=http://localhost:8086/k6 index.js
 ```
 
 #### Otras pruebas disponibles:
 
 **Pruebas de Carga:**
 ```bash
-k6 run --vus 50 --duration 2m --out influxdb=http://localhost:8086/k6 carga/home-test.js
-k6 run --vus 75 --duration 3m --out influxdb=http://localhost:8086/k6 carga/instructor_cursos.js
-k6 run --vus 100 --duration 2m --out influxdb=http://localhost:8086/k6 carga/RF1.js
+.\k6.exe run --vus 50 --duration 2m --out influxdb=http://localhost:8086/k6 carga/home-test.js
+.\k6.exe run --vus 75 --duration 3m --out influxdb=http://localhost:8086/k6 carga/instructor_cursos.js
+.\k6.exe run --vus 100 --duration 2m --out influxdb=http://localhost:8086/k6 carga/RF1.js
 ```
 
 **Pruebas de Escalabilidad:**
 ```bash
-k6 run --vus 200 --duration 5m --out influxdb=http://localhost:8086/k6 escalabilidad/test1.js
+.\k6.exe run --vus 200 --duration 5m --out influxdb=http://localhost:8086/k6 escalabilidad/test1.js
 ```
 
 **Pruebas de Estabilidad:**
 ```bash
-k6 run --vus 50 --duration 10m --out influxdb=http://localhost:8086/k6 estabilidad/test_stabiliti.js
+.\k6.exe run --vus 50 --duration 10m --out influxdb=http://localhost:8086/k6 estabilidad/test_stabiliti.js
 ```
 
 **Pruebas de Estrés:**
 ```bash
-k6 run --vus 500 --duration 5m --out influxdb=http://localhost:8086/k6 estres/test1.js
+.\k6.exe run --out influxdb=http://localhost:8086/k6 estres/test1.js
+.\k6.exe run --out influxdb=http://localhost:8086/k6 estres/PE-CRS-01.js
 ```
 
 **Pruebas de Volumen:**
 ```bash
-k6 run --vus 100 --duration 3m --out influxdb=http://localhost:8086/k6 volumen/volume-test.js
+.\k6.exe run --vus 100 --duration 3m --out influxdb=http://localhost:8086/k6 volumen/volume-test.js
 ```
 
 ## 📊 Métricas del Dashboard
@@ -110,13 +131,19 @@ El dashboard incluye los siguientes paneles:
 
 ```
 Rendimiento-K6/
+├── k6.exe                      # Binario K6 personalizado con extensiones
 ├── docker-compose.yml          # Configuración de servicios
-├── grafana_dashboard.json      # Dashboard de Grafana
+├── grafana.json                # Dashboard de Grafana
+├── .env                        # Variables de entorno (tokens)
+├── login_token.js              # Módulo de autenticación
+├── courses.csv                 # Datos CSV para pruebas
 ├── index.js                    # Prueba de ejemplo
 ├── carga/                      # Pruebas de carga
 ├── escalabilidad/              # Pruebas de escalabilidad
 ├── estabilidad/                # Pruebas de estabilidad
 ├── estres/                     # Pruebas de estrés
+│   ├── PE-CRS-01.js           # Prueba de estrés para archivado de cursos
+│   └── test1.js               # Prueba de estrés general
 ├── volumen/                    # Pruebas de volumen
 ├── grafana_data/               # Datos persistentes de Grafana
 └── influxdb_data/              # Datos persistentes de InfluxDB
@@ -139,16 +166,29 @@ docker-compose down
 docker-compose down -v
 ```
 
-### K6
+### K6 con extensiones
 ```bash
-# Ejecutar con parámetros personalizados
-k6 run --vus <usuarios> --duration <tiempo> --out influxdb=http://localhost:8086/k6 <script.js>
+# Ejecutar con parámetros personalizados usando el binario local
+.\k6.exe run --vus <usuarios> --duration <tiempo> --out influxdb=http://localhost:8086/k6 <script.js>
 
 # Ejemplo con más opciones
-k6 run --vus 200 --duration 5m --rps 500 --out influxdb=http://localhost:8086/k6 index.js
+.\k6.exe run --vus 200 --duration 5m --rps 500 --out influxdb=http://localhost:8086/k6 index.js
+
+# Ejecutar con dashboard en tiempo real
+.\k6.exe run --vus 100 --duration 2m --out dashboard --out influxdb=http://localhost:8086/k6 index.js
 ```
 
 ## 🐛 Solución de Problemas
+
+### Tokens de autenticación
+- **Error al cargar tokens desde .env**: Verifica que el archivo `.env` existe y contiene los tokens
+- **Tokens expirados**: Actualiza los valores en el archivo `.env`
+- **Obtener tokens nuevos**: 
+  1. Abre las DevTools del navegador (F12)
+  2. Ve a la pestaña Network
+  3. Haz login en la aplicación
+  4. Busca las cookies en las requests: `JSESSIONID`, `CSRF-TOKEN`, `AUTH-TOKEN`
+  5. Actualiza el archivo `.env` con los nuevos valores
 
 ### InfluxDB no conecta
 - Verificar que el servicio esté corriendo: `docker-compose ps`
