@@ -29,7 +29,7 @@ export default function () {
   const index = __ITER; // índice de iteración actual
   const course = courses[index];
 
-  const url = `${BASE_URL}/webapi/course`;
+  const url = `${BASE_URL}/webapi/course?instructorinstitution=UNSA`;
   const payload = JSON.stringify({
     courseId: course.courseId,
     courseName: course.courseName,
