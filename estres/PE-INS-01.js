@@ -5,10 +5,14 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./request.csv');
+const csvData = open('./../csv/instructors.csv');
 const rows = CSV.parse(csvData, ',');
 
-const requestIds = rows.map(row => row.requestId).filter(id => id);
+const instructors = rows.map(row => ({
+  instructorEmail: row.email,
+  instructorName: row.name,
+  instructorInstitution: row.institutetion
+})).filter(item => item.instructorEmail && item.instructorName && item.instructorInstitution);
 
 export let options = {
   stages: [
@@ -35,13 +39,19 @@ function getRandomRequestId() {
   return requestIds[__ITER % requestIds.length];
 }
 
+function getRandomData() {
+  if (instructors.length === 0) {
+    throw new Error('No hay datos de instructores disponibles en el CSV');
+  }
+  return instructors[__ITER % instructors.length];
+}
+
 export default function () {
-  const requestId = getRandomRequestId();
-  const url = `${BASE_URL}/webapi/account/request?id=${requestId}`;
-  const payload = JSON.stringify({ status: 'approved' });
+  const url = `${BASE_URL}/webapi/account/request`;
+  const payload = JSON.stringify(getRandomData());
   const headers = getHeadersWithCSRF();
 
-  const res = http.put(url, payload, { headers });
+  const res = http.post(url, payload, { headers });
 
   check(res, {
     'PE-INS-01: Status is 200 o 201': (r) => r.status === 200 || r.status === 201,
@@ -56,9 +66,4 @@ export default function () {
       }
     },
   });
-
-  // Log de errores para debug
-  if (res.status >= 400) {
-    console.error(`❌ Error ${res.status} aprobando solicitud ${requestId}: ${res.body}`);
-  }
 }
