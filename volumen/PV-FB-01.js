@@ -1,14 +1,9 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import CSV from "k6/x/csv";
 import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
-// Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
-const rows = CSV.parse(csvData, ',');
-
-const courseIds = rows.map(row => row.courseId).filter(id => id);
+const courseIds = [1,2,3,4,5]
 
 // Generar 500 combinaciones para la prueba
 const sessionsToCreate = Array.from({ length: 500 }, (_, index) => ({
@@ -17,8 +12,14 @@ const sessionsToCreate = Array.from({ length: 500 }, (_, index) => ({
 }));
 
 export let options = {
-  vus: 1,
-  iterations: sessionsToCreate.length,
+  scenarios: {
+    create_all_sessions: {
+      executor: 'shared-iterations',
+      vus: 1,
+      iterations: sessionsToCreate.length, // Total de sesiones a crear
+      maxDuration: '4h',                   // Tiempo máximo para terminar
+    },
+  },
   thresholds: {
     'http_req_duration': ['p(95)<3000'],    // 95% de requests < 3s
     'http_req_failed': ['rate<0.05'],       // <5% de fallos aceptable
