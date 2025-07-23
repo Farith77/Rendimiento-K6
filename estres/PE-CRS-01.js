@@ -5,7 +5,7 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
+const csvData = open('./../csv/courses.csv');
 const rows = CSV.parse(csvData, ',');
 
 const courseIds = rows.map(row => row.courseId).filter(id => id);
@@ -56,9 +56,4 @@ export default function () {
       }
     },
   });
-
-  // Log de errores para debug
-  if (res.status >= 400) {
-    console.error(`❌ Error ${res.status} archivando curso ${courseId}: ${res.body}`);
-  }
 }
