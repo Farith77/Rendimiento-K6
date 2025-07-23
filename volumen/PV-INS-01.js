@@ -5,23 +5,28 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./instructors.csv');
+const csvData = open('./../csv/instructors.csv');
 const rows = CSV.parse(csvData, ',');
 
 const instructors = rows.map(row => ({
-  name: row.name,
-  email: row.email,
-  institute: row.institute,
-  country: row.country,
-  comments: row.comments || ''
-})).filter(instructor => instructor.name && instructor.email);
+  instructorEmail: row.email,
+  instructorName: row.name,
+  instructorInstitution: row.institutetion
+})).filter(item => item.instructorEmail && item.instructorName && item.instructorInstitution);
+
 
 // Limitar a 500 instructores para la prueba
 const instructorsToRegister = instructors.slice(0, 500);
 
 export let options = {
-  vus: 1,
-  iterations: instructorsToRegister.length,
+  scenarios: {
+    register_all_instructors: {
+      executor: 'shared-iterations',
+      vus: 1,
+      iterations: 500, // Total de instructores a registrar
+      maxDuration: '4h',                        // Tiempo máximo para terminar
+    },
+  },
   thresholds: {
     'http_req_duration': ['p(95)<3000'],    // 95% de requests < 3s
     'http_req_failed': ['rate<0.05'],       // <5% de fallos aceptable
@@ -30,19 +35,16 @@ export let options = {
   },
 };
 
+function getRandomData() {
+  if (instructors.length === 0) {
+    throw new Error('No hay datos de instructores disponibles en el CSV');
+  }
+  return instructors[__ITER % instructors.length];
+}
+
 export default function () {
-  const index = __ITER; // índice de iteración actual
-  const instructor = instructorsToRegister[index];
-
   const url = `${BASE_URL}/webapi/account/request`;
-  const payload = JSON.stringify({
-    name: instructor.name,
-    email: instructor.email,
-    institute: instructor.institute,
-    country: instructor.country,
-    comments: instructor.comments
-  });
-
+  const payload = JSON.stringify(getRandomData());
   const headers = getHeadersWithCSRF();
 
   const res = http.post(url, payload, { headers });
@@ -60,9 +62,4 @@ export default function () {
       }
     },
   });
-
-  // Log de errores para debug
-  if (res.status >= 400) {
-    console.error(`❌ Error ${res.status} registrando instructor ${instructor.email}: ${res.body}`);
-  }
 }
