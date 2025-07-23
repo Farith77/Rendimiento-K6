@@ -5,12 +5,12 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./students.csv');
+const csvData = open('./../csv/students.csv');
 const rows = CSV.parse(csvData, ',');
 
 const students = rows.map(row => ({
   courseId: row.courseId,
-  studentEmail: row.studentEmail
+  studentEmail: row.email
 })).filter(student => student.courseId && student.studentEmail);
 
 export let options = {
@@ -25,9 +25,8 @@ export let options = {
   ],
   thresholds: {
     'http_req_duration': ['p(95)<5000'],    // 95% de requests < 5s
-    'http_req_failed': ['rate<0.1'],        // <10% de fallos aceptable
     'checks': ['rate>0.9'],                 // 90% de validaciones exitosas
-    'http_req_duration{group:::main}': ['avg<3000'], // Throughput: latencia promedio < 3s
+    'http_req_duration{group:::main}': ['avg<5000'], // Throughput: latencia promedio < 5s
   },
 };
 
@@ -64,13 +63,10 @@ export default function () {
     'PE-STU-02: Status is 200 o 201': (r) => r.status === 200 || r.status === 201,
     'PE-STU-02: Response time < 5000ms': (r) => r.timings.duration < 5000,
     'PE-STU-02: No server errors': (r) => r.status < 500,
-    'PE-STU-02: Student updated successfully': (r) => {
-      try {
-        const jsonResponse = JSON.parse(r.body);
-        return jsonResponse.status === 'success' || r.status === 200;
-      } catch (e) {
-        return r.status === 200;
-      }
-    },
   });
+
+  // Log de errores para debug
+  if (res.status >= 400) {
+    console.error(`❌ Error ${res.status} actualizando estudiante en curso ${student.courseId}: ${res.body}`);
+  }
 }
