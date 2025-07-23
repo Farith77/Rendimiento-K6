@@ -5,7 +5,7 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
+const csvData = open('./../csv/courses.csv');
 const rows = CSV.parse(csvData, ',');
 
 const courses = rows.map(row => ({
@@ -16,8 +16,14 @@ const courses = rows.map(row => ({
 const coursesToRestore = courses.slice(0, 500);
 
 export let options = {
-  vus: 1,
-  iterations: coursesToRestore.length,
+  scenarios: {
+    restore_all_courses: {
+      executor: 'shared-iterations',
+      vus: 1,
+      iterations: coursesToRestore.length, // Total de cursos a restaurar
+      maxDuration: '4h',                   // Tiempo máximo para terminar
+    },
+  },
   thresholds: {
     'http_req_duration': ['p(95)<3000'],    // 95% de requests < 3s
     'http_req_failed': ['rate<0.05'],       // <5% de fallos aceptable
@@ -30,7 +36,7 @@ export default function () {
   const index = __ITER; // índice de iteración actual
   const course = coursesToRestore[index];
 
-  const url = `${BASE_URL}/webapi/bin/course?courseId=${course.courseId}`;
+  const url = `${BASE_URL}/webapi/bin/course?courseid=${course.courseId}`;
   const headers = getHeadersWithCSRF();
 
   const res = http.del(url, null, { headers });

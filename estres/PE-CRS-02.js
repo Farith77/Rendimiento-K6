@@ -5,7 +5,7 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
+const csvData = open('./../csv/courses.csv');
 const rows = CSV.parse(csvData, ',');
 
 const courseIds = rows.map(row => row.courseId).filter(id => id);
@@ -36,7 +36,7 @@ function getRandomCourseId() {
 
 export default function () {
   const courseId = getRandomCourseId();
-  const url = `${BASE_URL}/webapi/course?courseId=${courseId}`;
+  const url = `${BASE_URL}/webapi/course?courseid=${courseId}`;
   const headers = getHeadersWithCSRF();
 
   const res = http.del(url, null, { headers });
@@ -55,9 +55,4 @@ export default function () {
       }
     },
   });
-
-  // Log de errores para debug
-  if (res.status >= 400) {
-    console.error(`❌ Error ${res.status} eliminando curso ${courseId}: ${res.body}`);
-  }
 }
