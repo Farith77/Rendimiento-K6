@@ -1,14 +1,10 @@
 import http from 'k6/http';
 import { check } from 'k6';
-import CSV from "k6/x/csv";
 import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./courses.csv');
-const rows = CSV.parse(csvData, ',');
-
-const courseIds = rows.map(row => row.courseId).filter(id => id);
+const courseIds = [1,2,3,4,5]
 
 export let options = {
   stages: [
