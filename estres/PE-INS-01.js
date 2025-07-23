@@ -32,13 +32,6 @@ export let options = {
   },
 };
 
-function getRandomRequestId() {
-  if (requestIds.length === 0) {
-    throw new Error('No hay requestIds disponibles en el CSV');
-  }
-  return requestIds[__ITER % requestIds.length];
-}
-
 function getRandomData() {
   if (instructors.length === 0) {
     throw new Error('No hay datos de instructores disponibles en el CSV');
