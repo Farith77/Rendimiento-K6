@@ -5,7 +5,7 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./feedback.csv');
+const csvData = open('./../csv/feedback.csv');
 const rows = CSV.parse(csvData, ',');
 
 const feedbackSessions = rows.map(row => ({
@@ -21,8 +21,14 @@ const sessionsToUpdate = Array.from({ length: 500 }, (_, index) => ({
 }));
 
 export let options = {
-  vus: 1,
-  iterations: sessionsToUpdate.length,
+  scenarios: {
+    update_all_sessions: {
+      executor: 'shared-iterations',
+      vus: 1,
+      iterations: sessionsToUpdate.length, // Total de sesiones a actualizar
+      maxDuration: '4h',                   // Tiempo máximo para terminar
+    },
+  },
   thresholds: {
     'http_req_duration': ['p(95)<3000'],    // 95% de requests < 3s
     'http_req_failed': ['rate<0.05'],       // <5% de fallos aceptable
