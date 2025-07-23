@@ -5,7 +5,7 @@ import { getHeadersWithCSRF } from '../login_token.js';
 import { BASE_URL } from '../config.js';
 
 // Cargar y procesar el archivo CSV (ruta relativa desde la raíz del proyecto)
-const csvData = open('./feedback.csv');
+const csvData = open('./../csv/feedback.csv');
 const rows = CSV.parse(csvData, ',');
 
 const feedbackSessions = rows.map(row => ({
