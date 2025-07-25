@@ -4,7 +4,7 @@ import { getHeaders } from '../login_token.js';
 
 export let options = {
   vus: 200,                // 200 usuarios simultáneos
-  duration: '60s',         // durante 30 segundos
+  duration: '5m',         // durante 30 segundos
   thresholds: {
     http_req_duration: ['p(95)<2000'], // 95% de las solicitudes deben durar < 2s
     http_req_failed: ['rate<0.01'],    // menos del 1% de solicitudes fallidas
